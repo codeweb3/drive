@@ -1,0 +1,67 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <algorithm>
+using namespace std;
+
+int input[100001], tree[400001], n;
+
+int init(int s, int e, int index)
+{
+	if (s == e)
+	{
+		tree[index] = s;
+		return s;
+	}
+	int v1 = init(s, (s + e) / 2, 2 * index), v2 = init((s + e) / 2 + 1, e, 2 * index + 1);
+	if (input[v1] < input[v2]) tree[index] = v1;
+	else if (input[v1] == input[v2]) return min(v1, v2);
+	else tree[index] = v2;
+	return tree[index];
+}
+
+int query(int s, int e, int index, int ts, int te)
+{
+	if (e < ts || te < s) return n + 1;
+	if (ts <= s && e <= te) return tree[index];
+	int v1 = query(s, (s + e) / 2, 2 * index, ts, te), v2 = query((s + e) / 2 + 1, e, 2 * index + 1, ts, te);
+	if (input[v1] < input[v2]) return v1;
+	else if (input[v1] == input[v2]) return min(v1, v2);
+	else return v2;
+}
+
+void replace(int s, int e, int index, int pos, int val)
+{
+	if (s == e)
+	{
+		input[s] = val;
+		return;
+	}
+	if (val < input[tree[index]] || (val == input[tree[index]] && pos < tree[index]))
+	{
+		printf("%d ~ %d : %d -> %d\n", s, e, tree[index], pos);
+		tree[index] = pos;
+	}
+	if (pos <= (s + e) / 2) replace(s, (s + e) / 2, index * 2, pos, val);
+	else replace((s + e) / 2 + 1, e, index * 2 + 1, pos, val);
+}
+
+int main()
+{
+	int m, i, a, b, c;
+	scanf("%d", &n);
+	for (i = 1; i <= n; i++) scanf("%d", &input[i]);
+	input[n + 1] = 2000000000;
+	init(1, n, 1);
+	scanf("%d", &m);
+	for (i = 0; i < 4 * n; i++) printf("%d ", tree[i]);
+	printf("\n");
+	for (i = 0; i < m; i++)
+	{
+		scanf("%d %d %d", &a, &b, &c);
+		if (a == 2) printf("<%d\n", query(1, n, 1, b, c));
+		else replace(1, n, 1, b, c);
+		for (int j = 1; j <= n; j++) printf("%d ", input[j]);
+		printf("\n");
+	}
+	
+}
